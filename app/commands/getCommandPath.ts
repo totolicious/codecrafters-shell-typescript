@@ -8,11 +8,10 @@ export const getCommandPath = async (commandName: string) => {
   }
 
   const pathItems = process.env.PATH.split(":");
-  console.log(pathItems);
+
   const path = await pLocate(pathItems, async (testPath) => {
-    console.log(testPath);
     const result = await commandExistsAtPath({ path: testPath, commandName });
-    console.log(result);
+
     return result;
   });
 
