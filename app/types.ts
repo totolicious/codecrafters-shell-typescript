@@ -11,6 +11,7 @@ export const BUILTIN_COMMAND_NAMES = Object.freeze([
   "echo",
   "type",
   "pwd",
+  "cd",
 ] as const);
 
 export type BuiltinCommandName = (typeof BUILTIN_COMMAND_NAMES)[number];
