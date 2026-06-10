@@ -1,5 +1,9 @@
 import { isCodeError } from "../../errors/isCodeError";
 import type { Command } from "../../types";
+
+const HOMEDIR_ALIAS = "~";
+const OLDPWD_ALIAS = "-";
+
 let oldPwd: string | undefined = process.cwd();
 
 export const cd: Command = async (args: string[]) => {
@@ -11,12 +15,12 @@ export const cd: Command = async (args: string[]) => {
   let newPwd: string;
 
   // this points to HOME
-  if (args[0] === "~" || !args[0]) {
+  if (args[0] === HOMEDIR_ALIAS || !args[0]) {
     if (!process.env.HOME) {
       throw new Error("HOME env var is not set");
     }
     newPwd = process.env.HOME;
-  } else if (args[0] === "-") {
+  } else if (args[0] === OLDPWD_ALIAS) {
     console.log(oldPwd);
     newPwd = oldPwd ?? process.cwd();
   } else {
