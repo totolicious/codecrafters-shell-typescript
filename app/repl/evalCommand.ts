@@ -1,7 +1,8 @@
 import { Interface } from "readline";
-import { commandNotFound } from "../errors/commandNotFound";
+import { commandNotFound } from "./errors/commandNotFound";
 import { getBuiltinCommand } from "../commands/getBuiltinCommand";
 import { getCommandPath } from "../commands/getCommandPath";
+import { executeCommandAtPath } from "../commands/executeCommandAtPath";
 
 export const evalCommand = async (line: string, rl: Interface) => {
   const trimmedLine = line.trim();
@@ -19,7 +20,8 @@ export const evalCommand = async (line: string, rl: Interface) => {
 
   const commandPath = await getCommandPath(commandName);
   if (commandPath) {
-    // TODO: execute command
+    await executeCommandAtPath({ path: commandPath, args });
+    return;
   }
 
   console.log(commandNotFound(trimmedLine));
