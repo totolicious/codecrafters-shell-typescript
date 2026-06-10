@@ -1,5 +1,5 @@
 import { createInterface } from "readline";
-import { commandNotFound } from "./errors/commandNotFound";
+import { evalCommand } from "./repl/evalCommand";
 
 const rl = createInterface({
   input: process.stdin,
@@ -8,7 +8,7 @@ const rl = createInterface({
 });
 
 rl.on("line", (line) => {
-  console.log(commandNotFound(line));
+  evalCommand(line, rl);
   rl.prompt();
 });
 
