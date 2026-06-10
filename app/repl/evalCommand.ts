@@ -1,8 +1,8 @@
 import { Interface } from "readline";
 import { commandNotFound } from "./errors/commandNotFound";
 import { getBuiltinCommand } from "../commands/getBuiltinCommand";
-import { getCommandPath } from "../commands/getCommandPath";
 import { executeBinary } from "../commands/executeBinary";
+import { isBinary } from "../commands/isBinary";
 
 export const evalCommand = async (line: string, rl: Interface) => {
   const trimmedLine = line.trim();
@@ -18,8 +18,7 @@ export const evalCommand = async (line: string, rl: Interface) => {
     return;
   }
 
-  const commandPath = await getCommandPath(commandName);
-  if (commandPath) {
+  if (await isBinary(commandName)) {
     await executeBinary({ executable: commandName, args });
     return;
   }
