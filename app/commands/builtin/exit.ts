@@ -1,5 +1,5 @@
 import { Interface } from "readline";
-import type { Command } from "../types";
+import type { Command } from "../../types";
 
 export const exit: Command = (args: string[], rl: Interface) => {
   if (args.length <= 1) {

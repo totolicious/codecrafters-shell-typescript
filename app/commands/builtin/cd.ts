@@ -1,8 +1,8 @@
+import { isCodeError } from "../../errors/isCodeError";
 import type { Command } from "../../types";
-
 let oldPwd: string | undefined = process.cwd();
 
-export const cd: Command = (args: string[]) => {
+export const cd: Command = async (args: string[]) => {
   if (args.length > 1) {
     console.log("cd: too many arguments");
     return;
@@ -23,6 +23,27 @@ export const cd: Command = (args: string[]) => {
     newPwd = args[0];
   }
 
-  oldPwd = process.cwd();
-  process.chdir(newPwd);
+  const oldPwdCandidate = process.cwd();
+  try {
+    process.chdir(newPwd);
+    oldPwd = oldPwdCandidate;
+  } catch (error) {
+    if (!isCodeError(error)) {
+      throw error;
+    }
+
+    switch (error.code) {
+      case "ENOTDIR": {
+        console.log(`cd: not a directory: ${newPwd}`);
+        break;
+      }
+      case "ENOENT": {
+        console.log(`cd: ${newPwd}: No such file or directory`);
+        break;
+      }
+      default: {
+        throw error;
+      }
+    }
+  }
 };
