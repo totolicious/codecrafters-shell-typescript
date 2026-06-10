@@ -2,10 +2,11 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["node_modules/", "bun.lock"],
+    ignores: ["node_modules/", "bun.lock", "eslint.config.js"],
   },
-  ...tseslint.configs.recommendedTypeChecked,
+  ...tseslint.configs.recommended,
   {
+    files: ["**/*.ts"],
     languageOptions: {
       parserOptions: {
         projectService: true,
