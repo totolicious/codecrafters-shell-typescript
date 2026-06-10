@@ -18,6 +18,6 @@ const printCommandType = async (commandName: string) => {
   console.log(`${commandName}: not found`);
 };
 
-export const type: Command = (args: string[]) => {
-  pEachSeries(args, printCommandType);
+export const type: Command = async (args: string[]) => {
+  await pEachSeries(args, printCommandType);
 };
