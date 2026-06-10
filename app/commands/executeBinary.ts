@@ -1,11 +1,11 @@
-export const executeCommandAtPath = async ({
-  path,
+export const executeBinary = async ({
+  executable,
   args,
 }: {
-  path: string;
+  executable: string;
   args: string[];
 }) => {
-  const proc = Bun.spawn([path, ...args], {
+  const proc = Bun.spawn([executable, ...args], {
     stdin: "inherit",
     stdout: "inherit",
     stderr: "inherit",
