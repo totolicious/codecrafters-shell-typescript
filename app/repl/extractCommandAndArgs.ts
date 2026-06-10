@@ -6,6 +6,7 @@ const isWhitespace = (char: string) => {
 
 const SINGLE_QUOTE = "'";
 const DOUBLE_QUOTE = '"';
+const BACKSLASH = "\\";
 
 const extractTokens = (input: string) => {
   const tokens: string[] = [];
@@ -19,22 +20,34 @@ const extractTokens = (input: string) => {
 
   let isInsideSingleQuotes = false;
   let isInsideDoubleQuotes = false;
+  let isEscaping = false;
 
   let currentToken = "";
   for (const char of input) {
-    if (char === SINGLE_QUOTE && !isInsideDoubleQuotes) {
-      isInsideSingleQuotes = !isInsideSingleQuotes;
+    if (char === BACKSLASH && !isEscaping) {
+      isEscaping = true;
       continue;
     }
 
-    if (char === DOUBLE_QUOTE && !isInsideSingleQuotes) {
-      isInsideDoubleQuotes = !isInsideDoubleQuotes;
-      continue;
-    }
+    if (!isEscaping) {
+      if (char === SINGLE_QUOTE && !isInsideDoubleQuotes) {
+        isInsideSingleQuotes = !isInsideSingleQuotes;
+        continue;
+      }
 
-    if (isWhitespace(char) && !isInsideSingleQuotes && !isInsideDoubleQuotes) {
-      addCurrentTokenIfNotEmpty();
-      continue;
+      if (char === DOUBLE_QUOTE && !isInsideSingleQuotes) {
+        isInsideDoubleQuotes = !isInsideDoubleQuotes;
+        continue;
+      }
+
+      if (
+        isWhitespace(char) &&
+        !isInsideSingleQuotes &&
+        !isInsideDoubleQuotes
+      ) {
+        addCurrentTokenIfNotEmpty();
+        continue;
+      }
     }
 
     currentToken += char;
