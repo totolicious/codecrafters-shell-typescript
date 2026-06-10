@@ -1,12 +1,6 @@
 import { Interface } from "readline";
 import { commandNotFound } from "../errors/commandNotFound";
-import type { Command } from "../types";
-import { echo, exit } from "../commands";
-
-const commands: Record<string, Command> = {
-  exit,
-  echo,
-};
+import { allCommands } from "../commands/_allCommands";
 
 export const evalCommand = (line: string, rl: Interface) => {
   const trimmedLine = line.trim();
@@ -16,15 +10,10 @@ export const evalCommand = (line: string, rl: Interface) => {
     return;
   }
 
-  const command = commands[commandName];
+  const command = allCommands[commandName];
 
   if (command) {
     command(args, rl);
-    return;
-  }
-
-  if (trimmedLine === "exit") {
-    exit(args, rl);
     return;
   }
 
