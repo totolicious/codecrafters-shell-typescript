@@ -1,3 +1,2 @@
-export * from "./echo";
-export * from "./exit";
-export * from "./type";
+export * from "./builtinCommands";
+export * from "./builtin";

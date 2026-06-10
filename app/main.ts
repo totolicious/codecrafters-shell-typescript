@@ -7,8 +7,8 @@ const rl = createInterface({
   prompt: "$ ",
 });
 
-rl.on("line", (line) => {
-  evalCommand(line, rl);
+rl.on("line", async (line) => {
+  await evalCommand(line, rl);
   rl.prompt();
 });
 
