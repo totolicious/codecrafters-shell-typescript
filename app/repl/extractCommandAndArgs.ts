@@ -24,20 +24,21 @@ const extractTokens = (input: string) => {
 
   let currentToken = "";
   for (const char of input) {
-    if (char === BACKSLASH && !isEscaping) {
-      isEscaping = true;
-      continue;
-    }
-
     if (!isEscaping) {
       if (char === SINGLE_QUOTE && !isInsideDoubleQuotes) {
         isInsideSingleQuotes = !isInsideSingleQuotes;
         continue;
       }
 
-      if (char === DOUBLE_QUOTE && !isInsideSingleQuotes) {
-        isInsideDoubleQuotes = !isInsideDoubleQuotes;
-        continue;
+      if (!isInsideSingleQuotes) {
+        if (char === BACKSLASH) {
+          isEscaping = true;
+          continue;
+        }
+        if (char === DOUBLE_QUOTE) {
+          isInsideDoubleQuotes = !isInsideDoubleQuotes;
+          continue;
+        }
       }
 
       if (
