@@ -8,7 +8,7 @@ const rl = createInterface({
 });
 
 rl.on("line", (line) => {
-  commandNotFound(line);
+  console.log(commandNotFound(line));
 });
 
 // TODO: Uncomment the code below to pass the first stage
