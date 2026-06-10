@@ -2,6 +2,11 @@ import { Interface } from "readline";
 
 type Awaitable<T> = T | Promise<T>;
 
+export type CommandNameAndArgs = {
+  commandName: string | undefined;
+  args: string[];
+};
+
 export type Command = (args: string[], rl: Interface) => Awaitable<void>;
 
 export type Commands = Record<string, Command>;
