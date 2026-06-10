@@ -50,6 +50,7 @@ const extractTokens = (input: string) => {
       }
     }
 
+    isEscaping = false;
     currentToken += char;
   }
 
