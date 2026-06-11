@@ -1,12 +1,12 @@
 import { isCodeError } from "../../errors/isCodeError";
-import type { Command } from "../../types";
+import { resolveShellPath } from "../../path/resolveShellPath";
+import type { Command, CommandExecutionArguments } from "../../types";
 
-const HOMEDIR_ALIAS = "~";
 const OLDPWD_ALIAS = "-";
 
 let oldPwd: string | undefined = process.cwd();
 
-export const cd: Command = async (args: string[]) => {
+export const cd: Command = async ({ args }: CommandExecutionArguments) => {
   if (args.length > 1) {
     console.log("cd: too many arguments");
     return;
@@ -14,8 +14,8 @@ export const cd: Command = async (args: string[]) => {
 
   let newPwd: string;
 
-  // this points to HOME
-  if (args[0] === HOMEDIR_ALIAS || !args[0]) {
+  // no arg points to home
+  if (!args[0]) {
     if (!process.env.HOME) {
       throw new Error("HOME env var is not set");
     }
@@ -26,6 +26,9 @@ export const cd: Command = async (args: string[]) => {
   } else {
     newPwd = args[0];
   }
+
+  // if path starts with home dir
+  newPwd = resolveShellPath(newPwd);
 
   const oldPwdCandidate = process.cwd();
   try {

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "p-each-series": "^3.0.0",
-    "p-locate": "^7.0.0"
+    "p-locate": "^7.0.0",
+    "untildify": "^6.0.0"
   }
 }

@@ -1,4 +1,4 @@
-import type { Command } from "../../types";
+import type { Command, CommandExecutionArguments } from "../../types";
 import { isBuiltinCommand } from "../isBuiltinCommand";
 import { getCommandPath } from "../getCommandPath";
 import pEachSeries from "p-each-series";
@@ -18,6 +18,6 @@ const printCommandType = async (commandName: string) => {
   console.log(`${commandName}: not found`);
 };
 
-export const type: Command = async (args: string[]) => {
+export const type: Command = async ({ args }: CommandExecutionArguments) => {
   await pEachSeries(args, printCommandType);
 };

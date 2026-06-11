@@ -1,5 +1,6 @@
-import type { Command } from "../../types";
+import type { Command, CommandExecutionArguments } from "../../types";
 
-export const echo: Command = (args: string[]) => {
-  console.log(args.join(" "));
+export const echo: Command = ({ args, streams }: CommandExecutionArguments) => {
+  streams.stdout.write(args.join(" "));
+  streams.stdout.end();
 };

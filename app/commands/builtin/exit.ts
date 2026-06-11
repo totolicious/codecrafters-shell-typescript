@@ -1,7 +1,6 @@
-import { Interface } from "readline";
-import type { Command } from "../../types";
+import type { Command, CommandExecutionArguments } from "../../types";
 
-export const exit: Command = (args: string[], rl: Interface) => {
+export const exit: Command = ({ args, rl }: CommandExecutionArguments) => {
   if (args.length <= 1) {
     rl.close();
     process.exit(args[0] ?? 0);

@@ -3,26 +3,68 @@ import { commandNotFound } from "./errors/commandNotFound";
 import { getBuiltinCommand } from "../commands/getBuiltinCommand";
 import { executeBinary } from "../commands/executeBinary";
 import { isBinary } from "../commands/isBinary";
-import { extractCommandAndArgs } from "./extractCommandAndArgs";
+import { extractCommandProperties } from "./extractCommandProperties";
+import { createCommandStreams } from "./createCommandStreams";
+import { resolveShellPath } from "../path/resolveShellPath";
+import { fileRedirectModeToFileOpenModeFlags } from "../types";
+import type { Writable } from "node:stream";
+import fs from "fs";
+import { RedirectionOperatorStreamType } from "./RedirectionOperator";
 
 export const evalCommand = async (line: string, rl: Interface) => {
   const trimmedLine = line.trim();
-  const { commandName, args } = extractCommandAndArgs(trimmedLine);
+  const { commandName, args, fileRedirections } =
+    extractCommandProperties(trimmedLine);
 
   if (!commandName) {
     return;
   }
 
+  // create the command streams
+  const commandStreams = createCommandStreams();
+
+  let outputStreamTarget: Writable = process.stdout;
+  let errorStreamTarget: Writable = process.stderr;
+
+  // redirection step 1 - create all files
+  const writeStreams = fileRedirections.map((fr) => {
+    const path = resolveShellPath(fr.filePath);
+
+    // create file streams
+    const stream = fs.createWriteStream(path, {
+      flags: fileRedirectModeToFileOpenModeFlags(fr.redirectionOperator.mode),
+    });
+
+    if (
+      fr.redirectionOperator.streamType === RedirectionOperatorStreamType.Stdout
+    ) {
+      outputStreamTarget = stream;
+    } else {
+      errorStreamTarget = stream;
+    }
+
+    return stream;
+  });
+
+  // redirection step 2 - only write to target streams
+  commandStreams.stdout.pipe(outputStreamTarget);
+  commandStreams.stderr.pipe(errorStreamTarget);
+
+  // execute commands
   const builtinCommand = getBuiltinCommand(commandName);
   if (builtinCommand) {
-    await builtinCommand(args, rl);
+    await builtinCommand({ args, rl, streams: commandStreams });
+  } else if (await isBinary(commandName)) {
+    await executeBinary({
+      executable: commandName,
+      args,
+      streams: commandStreams,
+    });
+  } else {
+    console.log(commandNotFound(commandName));
     return;
   }
 
-  if (await isBinary(commandName)) {
-    await executeBinary({ executable: commandName, args });
-    return;
-  }
-
-  console.log(commandNotFound(trimmedLine));
+  // redirection step 3 - close all streams
+  writeStreams.forEach((stream) => stream.close());
 };
