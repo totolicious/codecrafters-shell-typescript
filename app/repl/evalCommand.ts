@@ -7,10 +7,43 @@ import { extractCommandProperties } from "./extractCommandProperties";
 import { createCommandStreams } from "./createCommandStreams";
 import { resolveShellPath } from "../path/resolveShellPath";
 import { fileRedirectModeToFileOpenModeFlags } from "../types";
-import type { Writable } from "node:stream";
+import { PassThrough, type Writable } from "node:stream";
 import { finished } from "node:stream/promises";
 import fs from "fs";
+import { formatCodeErrorMessage } from "../errors/formatCodeErrorMessage";
 import { RedirectionOperatorStreamType } from "./RedirectionOperator";
+
+const wrapStdoutForReadline = (destination: Writable): Writable => {
+  let lastByte: number | null = null;
+  const stream = new PassThrough();
+
+  stream.on("data", (chunk: Buffer) => {
+    destination.write(chunk);
+    if (chunk.length > 0) {
+      lastByte = chunk[chunk.length - 1]!;
+    }
+  });
+
+  stream.on("end", () => {
+    if (lastByte !== null && lastByte !== 0x0a) {
+      destination.write("\n");
+    }
+    lastByte = null;
+  });
+
+  return stream;
+};
+
+const openWriteStream = (
+  path: string,
+  flags: "w" | "a",
+): Promise<fs.WriteStream> => {
+  return new Promise((resolve, reject) => {
+    const stream = fs.createWriteStream(path, { flags });
+    stream.once("open", () => resolve(stream));
+    stream.once("error", reject);
+  });
+};
 
 export const evalCommand = async (line: string, rl: Interface) => {
   const trimmedLine = line.trim();
@@ -31,9 +64,17 @@ export const evalCommand = async (line: string, rl: Interface) => {
   for (const fr of fileRedirections) {
     const path = resolveShellPath(fr.filePath);
 
-    const stream = fs.createWriteStream(path, {
-      flags: fileRedirectModeToFileOpenModeFlags(fr.redirectionOperator.mode),
-    });
+    let stream: fs.WriteStream;
+    try {
+      stream = await openWriteStream(
+        path,
+        fileRedirectModeToFileOpenModeFlags(fr.redirectionOperator.mode),
+      );
+    } catch (error) {
+      const message = formatCodeErrorMessage(error, { path }) ?? String(error);
+      process.stderr.write(`${message}\n`);
+      return;
+    }
 
     if (
       fr.redirectionOperator.streamType === RedirectionOperatorStreamType.Stdout
@@ -45,9 +86,12 @@ export const evalCommand = async (line: string, rl: Interface) => {
   }
 
   // redirection step 2 - only write to target streams
-  commandStreams.stdout.pipe(outputStreamTarget, {
-    end: outputStreamTarget !== process.stdout,
-  });
+  const isStdoutTerminal = outputStreamTarget === process.stdout;
+  const stdoutTarget = isStdoutTerminal
+    ? wrapStdoutForReadline(process.stdout)
+    : outputStreamTarget;
+
+  commandStreams.stdout.pipe(stdoutTarget, { end: true });
   commandStreams.stderr.pipe(errorStreamTarget, {
     end: errorStreamTarget !== process.stderr,
   });

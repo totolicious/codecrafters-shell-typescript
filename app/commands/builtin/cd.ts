@@ -1,3 +1,4 @@
+import { formatCodeErrorMessage } from "../../errors/formatCodeErrorMessage";
 import { isCodeError } from "../../errors/isCodeError";
 import { resolveShellPath } from "../../path/resolveShellPath";
 import type { Command, CommandExecutionArguments } from "../../types";
@@ -6,9 +7,12 @@ const OLDPWD_ALIAS = "-";
 
 let oldPwd: string | undefined = process.cwd();
 
-export const cd: Command = async ({ args }: CommandExecutionArguments) => {
+export const cd: Command = async ({
+  args,
+  streams,
+}: CommandExecutionArguments) => {
   if (args.length > 1) {
-    console.log("cd: too many arguments");
+    streams.stderr.write("cd: too many arguments");
     return;
   }
 
@@ -21,7 +25,7 @@ export const cd: Command = async ({ args }: CommandExecutionArguments) => {
     }
     newPwd = process.env.HOME;
   } else if (args[0] === OLDPWD_ALIAS) {
-    console.log(oldPwd);
+    streams.stdout.write(oldPwd);
     newPwd = oldPwd ?? process.cwd();
   } else {
     newPwd = args[0];
@@ -39,18 +43,13 @@ export const cd: Command = async ({ args }: CommandExecutionArguments) => {
       throw error;
     }
 
-    switch (error.code) {
-      case "ENOTDIR": {
-        console.log(`cd: not a directory: ${newPwd}`);
-        break;
-      }
-      case "ENOENT": {
-        console.log(`cd: ${newPwd}: No such file or directory`);
-        break;
-      }
-      default: {
-        throw error;
-      }
+    const message = formatCodeErrorMessage(error, {
+      path: newPwd,
+      prefix: "cd",
+    });
+    if (message === undefined) {
+      throw error;
     }
+    streams.stderr.write(message);
   }
 };

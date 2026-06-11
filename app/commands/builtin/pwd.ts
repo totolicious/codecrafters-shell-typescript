@@ -1,10 +1,10 @@
 import type { Command, CommandExecutionArguments } from "../../types";
 
-export const pwd: Command = ({ args }: CommandExecutionArguments) => {
+export const pwd: Command = ({ args, streams }: CommandExecutionArguments) => {
   if (args.length > 0) {
-    console.log("pwd: too many arguments");
+    streams.stderr.write("pwd: too many arguments");
     return;
   }
 
-  console.log(process.cwd());
+  streams.stdout.write(process.cwd());
 };
