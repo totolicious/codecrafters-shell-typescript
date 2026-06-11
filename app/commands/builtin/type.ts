@@ -9,16 +9,16 @@ export const type: Command = async ({
 }: CommandExecutionArguments) => {
   await pEachSeries(args, async (commandName) => {
     if (isBuiltinCommand(commandName)) {
-      streams.stdout.write(`${commandName} is a shell builtin`);
+      streams.stdout.write(`${commandName} is a shell builtin\n`);
       return;
     }
 
     const path = await getCommandPath(commandName);
     if (path) {
-      streams.stdout.write(`${commandName} is ${path}`);
+      streams.stdout.write(`${commandName} is ${path}\n`);
       return;
     }
 
-    streams.stderr.write(`${commandName}: not found`);
+    streams.stderr.write(`${commandName}: not found\n`);
   });
 };

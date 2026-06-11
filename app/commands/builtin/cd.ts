@@ -12,7 +12,7 @@ export const cd: Command = async ({
   streams,
 }: CommandExecutionArguments) => {
   if (args.length > 1) {
-    streams.stderr.write("cd: too many arguments");
+    streams.stderr.write("cd: too many arguments\n");
     return;
   }
 
@@ -25,7 +25,7 @@ export const cd: Command = async ({
     }
     newPwd = process.env.HOME;
   } else if (args[0] === OLDPWD_ALIAS) {
-    streams.stdout.write(oldPwd);
+    streams.stdout.write(`${oldPwd}\n`);
     newPwd = oldPwd ?? process.cwd();
   } else {
     newPwd = args[0];
@@ -51,6 +51,6 @@ export const cd: Command = async ({
     if (message === undefined) {
       throw error;
     }
-    streams.stderr.write(message);
+    streams.stderr.write(`${message}\n`);
   }
 };
