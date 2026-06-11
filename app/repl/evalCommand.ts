@@ -8,13 +8,9 @@ import { createCommandStreams } from "./createCommandStreams";
 import { resolveShellPath } from "../path/resolveShellPath";
 import { fileRedirectModeToFileOpenModeFlags } from "../types";
 import type { Writable } from "node:stream";
+import { finished } from "node:stream/promises";
 import fs from "fs";
 import { RedirectionOperatorStreamType } from "./RedirectionOperator";
-import { once } from "node:events";
-
-function streamFinished(stream: Writable) {
-  return once(stream, "finish");
-}
 
 export const evalCommand = async (line: string, rl: Interface) => {
   const trimmedLine = line.trim();
@@ -32,10 +28,9 @@ export const evalCommand = async (line: string, rl: Interface) => {
   let errorStreamTarget: Writable = process.stderr;
 
   // redirection step 1 - create all files
-  const writeStreams = fileRedirections.map((fr) => {
+  for (const fr of fileRedirections) {
     const path = resolveShellPath(fr.filePath);
 
-    // create file streams
     const stream = fs.createWriteStream(path, {
       flags: fileRedirectModeToFileOpenModeFlags(fr.redirectionOperator.mode),
     });
@@ -47,18 +42,15 @@ export const evalCommand = async (line: string, rl: Interface) => {
     } else {
       errorStreamTarget = stream;
     }
-
-    return stream;
-  });
+  }
 
   // redirection step 2 - only write to target streams
-  const streamsFinishedPromises = [
-    once(outputStreamTarget, "finish"),
-    once(errorStreamTarget, "finish"),
-  ];
-
-  commandStreams.stdout.pipe(outputStreamTarget);
-  commandStreams.stderr.pipe(errorStreamTarget);
+  commandStreams.stdout.pipe(outputStreamTarget, {
+    end: outputStreamTarget !== process.stdout,
+  });
+  commandStreams.stderr.pipe(errorStreamTarget, {
+    end: errorStreamTarget !== process.stderr,
+  });
 
   // execute commands
   const builtinCommand = getBuiltinCommand(commandName);
@@ -75,9 +67,15 @@ export const evalCommand = async (line: string, rl: Interface) => {
     return;
   }
 
-  // redirection step 3 - close all streams
-  writeStreams.forEach((stream) => stream.close());
+  if (!commandStreams.stdout.writableEnded) {
+    commandStreams.stdout.end();
+  }
+  if (!commandStreams.stderr.writableEnded) {
+    commandStreams.stderr.end();
+  }
 
-  // wait for stream write promises to finish
-  await Promise.all(streamsFinishedPromises);
+  await Promise.all([
+    finished(commandStreams.stdout),
+    finished(commandStreams.stderr),
+  ]);
 };
