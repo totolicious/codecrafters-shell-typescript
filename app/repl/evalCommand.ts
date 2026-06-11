@@ -13,7 +13,7 @@ import fs from "fs";
 import { formatCodeErrorMessage } from "../errors/formatCodeErrorMessage";
 import { RedirectionOperatorStreamType } from "./RedirectionOperator";
 
-const wrapStdoutForReadline = (destination: Writable): Writable => {
+const wrapTerminalStreamForReadline = (destination: Writable): Writable => {
   let lastByte: number | null = null;
   const stream = new PassThrough();
 
@@ -88,13 +88,16 @@ export const evalCommand = async (line: string, rl: Interface) => {
   // redirection step 2 - only write to target streams
   const isStdoutTerminal = outputStreamTarget === process.stdout;
   const stdoutTarget = isStdoutTerminal
-    ? wrapStdoutForReadline(process.stdout)
+    ? wrapTerminalStreamForReadline(process.stdout)
     : outputStreamTarget;
 
+  const isStderrTerminal = errorStreamTarget === process.stderr;
+  const stderrTarget = isStderrTerminal
+    ? wrapTerminalStreamForReadline(process.stderr)
+    : errorStreamTarget;
+
   commandStreams.stdout.pipe(stdoutTarget, { end: true });
-  commandStreams.stderr.pipe(errorStreamTarget, {
-    end: errorStreamTarget !== process.stderr,
-  });
+  commandStreams.stderr.pipe(stderrTarget, { end: true });
 
   // execute commands
   const builtinCommand = getBuiltinCommand(commandName);
@@ -107,7 +110,7 @@ export const evalCommand = async (line: string, rl: Interface) => {
       streams: commandStreams,
     });
   } else {
-    console.log(commandNotFound(commandName));
+    commandStreams.stderr.write(commandNotFound(commandName));
     return;
   }
 

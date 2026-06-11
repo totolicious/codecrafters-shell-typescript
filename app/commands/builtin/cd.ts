@@ -47,6 +47,7 @@ export const cd: Command = async ({
       path: newPwd,
       prefix: "cd",
     });
+
     if (message === undefined) {
       throw error;
     }
