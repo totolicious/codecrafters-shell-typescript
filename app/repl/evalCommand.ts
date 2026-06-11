@@ -110,7 +110,7 @@ export const evalCommand = async (line: string, rl: Interface) => {
       streams: commandStreams,
     });
   } else {
-    commandStreams.stderr.write(commandNotFound(commandName));
+    commandStreams.stderr.write(`${commandNotFound(commandName)}\n`);
     return;
   }
 
