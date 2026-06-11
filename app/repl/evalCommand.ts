@@ -10,6 +10,11 @@ import { fileRedirectModeToFileOpenModeFlags } from "../types";
 import type { Writable } from "node:stream";
 import fs from "fs";
 import { RedirectionOperatorStreamType } from "./RedirectionOperator";
+import { once } from "node:events";
+
+function streamFinished(stream: Writable) {
+  return once(stream, "finish");
+}
 
 export const evalCommand = async (line: string, rl: Interface) => {
   const trimmedLine = line.trim();
@@ -47,6 +52,11 @@ export const evalCommand = async (line: string, rl: Interface) => {
   });
 
   // redirection step 2 - only write to target streams
+  const streamsFinishedPromises = [
+    once(outputStreamTarget, "finish"),
+    once(errorStreamTarget, "finish"),
+  ];
+
   commandStreams.stdout.pipe(outputStreamTarget);
   commandStreams.stderr.pipe(errorStreamTarget);
 
@@ -67,4 +77,7 @@ export const evalCommand = async (line: string, rl: Interface) => {
 
   // redirection step 3 - close all streams
   writeStreams.forEach((stream) => stream.close());
+
+  // wait for stream write promises to finish
+  await Promise.all(streamsFinishedPromises);
 };
