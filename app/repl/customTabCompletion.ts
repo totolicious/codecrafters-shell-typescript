@@ -14,11 +14,10 @@ export function createCustomTabCompleter(
       const trimmedLine = line.trim();
       try {
         let completions: string[] = getBuiltinCommandCompletion(trimmedLine);
-        if (completions.length) {
-          return completions;
-        }
 
-        completions = await getPathCommandCompletion(trimmedLine);
+        if (!completions.length) {
+          completions = await getPathCommandCompletion(trimmedLine);
+        }
 
         if (completions.length === 0) {
           lastKeyWasTab = false;
