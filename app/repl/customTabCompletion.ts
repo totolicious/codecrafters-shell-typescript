@@ -4,10 +4,29 @@ import { ringBell } from "./ringBell";
 import { getBuiltinCommandCompletion } from "../completer/getBuiltinCommandCompletion";
 import { getPathCommandCompletion } from "../completer/getPathCommandCompletion";
 
+const getLongestCommonPrefix = (completions: string[]) => {
+  if (!completions.length) {
+    return "";
+  }
+
+  let prefix = completions[0];
+
+  for (let i = 1; i < completions.length; i++) {
+    while (!completions[i].startsWith(prefix)) {
+      prefix = prefix.slice(0, -1);
+      if (!prefix) {
+        return "";
+      }
+    }
+  }
+
+  return prefix;
+};
+
 export function createCustomTabCompleter(
   getRl: () => Interface,
 ): AsyncCompleter {
-  let lastKeyWasTab = false;
+  let shouldShowListOnNextTab = false;
 
   return (line, callback) => {
     void (async () => {
@@ -19,27 +38,38 @@ export function createCustomTabCompleter(
           completions = await getPathCommandCompletion(trimmedLine);
         }
 
+        // nothing found
         if (completions.length === 0) {
-          lastKeyWasTab = false;
+          shouldShowListOnNextTab = false;
           await ringBell();
           callback(null, [[], line]);
           return;
         }
 
+        // perfect match
         if (completions.length === 1) {
-          lastKeyWasTab = false;
+          shouldShowListOnNextTab = false;
           callback(null, [[`${completions[0]} `], line]);
           return;
         }
 
-        if (!lastKeyWasTab) {
-          lastKeyWasTab = true;
+        // partial completions
+        const commonPrefix = getLongestCommonPrefix(completions);
+        if (commonPrefix.length > trimmedLine.length) {
+          callback(null, [[commonPrefix], line]);
+          shouldShowListOnNextTab = false;
+          return;
+        }
+
+        // needs second completions invocation to show full list
+        if (!shouldShowListOnNextTab) {
+          shouldShowListOnNextTab = true;
           await ringBell();
           callback(null, [[], line]);
           return;
         }
 
-        lastKeyWasTab = false;
+        shouldShowListOnNextTab = false;
         completions.sort();
         process.stdout.write(`\n${completions.join("  ")}\n`);
         callback(null, [[], line]);
