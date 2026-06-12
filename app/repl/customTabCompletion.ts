@@ -89,9 +89,9 @@ export function createCustomTabCompleter(
           } else {
             callback(null, [
               [
-                line.concat(
-                  completions[0].slice(commonPrefixComparator.length),
-                ),
+                line
+                  .concat(completions[0].slice(commonPrefixComparator.length))
+                  .concat(" "),
               ],
               line,
             ]);
