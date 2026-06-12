@@ -8,7 +8,7 @@ const SINGLE_QUOTE = "'";
 const DOUBLE_QUOTE = '"';
 const BACKSLASH = "\\";
 
-const isWhitespace = (char: string) => {
+export const isWhitespace = (char: string) => {
   return [" ", "\t"].includes(char);
 };
 
@@ -32,7 +32,10 @@ const getRedirectionOperator = (
   return redirectionOperator ?? null;
 };
 
-export const extractCommandProperties = (input: string): CommandProperties => {
+export const extractCommandProperties = (
+  input: string,
+  throwOnRedirectionMissingFilename: boolean = true,
+): CommandProperties => {
   let commandName: string | undefined;
   const args: string[] = [];
   const fileRedirections: FileRedirection[] = [];
@@ -133,7 +136,7 @@ export const extractCommandProperties = (input: string): CommandProperties => {
   }
 
   addCurrentTokenIfNotEmpty();
-  if (activeRedirectionOperator) {
+  if (activeRedirectionOperator && throwOnRedirectionMissingFilename) {
     throw new Error(
       `Syntax error: redirection operator ${activeRedirectionOperator.displayName} is missing the file target"`,
     );

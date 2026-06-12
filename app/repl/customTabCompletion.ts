@@ -3,6 +3,11 @@ import type { AsyncCompleter, Interface } from "node:readline";
 import { ringBell } from "./ringBell";
 import { getBuiltinCommandCompletion } from "../completer/getBuiltinCommandCompletion";
 import { getPathCommandCompletion } from "../completer/getPathCommandCompletion";
+import {
+  extractCommandProperties,
+  isWhitespace,
+} from "./extractCommandProperties";
+import { getFileCompletionsForPrefix } from "../completer/getFileCompletionsForPrefix";
 
 const getLongestCommonPrefix = (completions: string[]) => {
   if (!completions.length) {
@@ -31,11 +36,41 @@ export function createCustomTabCompleter(
   return (line, callback) => {
     void (async () => {
       const trimmedLine = line.trim();
-      try {
-        let completions: string[] = getBuiltinCommandCompletion(trimmedLine);
+      // detect command or argument
+      const lastChar = line.length ? line[line.length - 1] : "";
 
-        if (!completions.length) {
-          completions = await getPathCommandCompletion(trimmedLine);
+      const { commandName, args } = extractCommandProperties(line, false);
+
+      let mode: "command" | "newArg" | "lastArg";
+
+      if (!commandName) {
+        mode = "command";
+      } else {
+        if (isWhitespace(lastChar) || lastChar === ">") {
+          mode = "newArg";
+        } else if (args.length) {
+          mode = "lastArg";
+        } else {
+          mode = "command";
+        }
+      }
+
+      try {
+        let completions: string[];
+        let commonPrefixComparator: string;
+        if (mode === "command") {
+          commonPrefixComparator = trimmedLine;
+          completions = getBuiltinCommandCompletion(trimmedLine);
+
+          if (!completions.length) {
+            completions = await getPathCommandCompletion(trimmedLine);
+          }
+        } else {
+          const filePrefix: string =
+            mode === "lastArg" ? args[args.length - 1] : "";
+          commonPrefixComparator = filePrefix;
+
+          completions = await getFileCompletionsForPrefix(filePrefix);
         }
 
         // nothing found
@@ -49,15 +84,30 @@ export function createCustomTabCompleter(
         // perfect match
         if (completions.length === 1) {
           shouldShowListOnNextTab = false;
-          callback(null, [[`${completions[0]} `], line]);
+          if (mode === "command") {
+            callback(null, [[`${completions[0]} `], line]);
+          } else {
+            callback(null, [
+              [
+                line.concat(
+                  completions[0].slice(commonPrefixComparator.length),
+                ),
+              ],
+              line,
+            ]);
+          }
           return;
         }
 
         // partial completions
         const commonPrefix = getLongestCommonPrefix(completions);
-        if (commonPrefix.length > trimmedLine.length) {
-          callback(null, [[commonPrefix], line]);
-          shouldShowListOnNextTab = false;
+        if (commonPrefix.length > commonPrefixComparator.length) {
+          const completion =
+            mode === "command"
+              ? commonPrefix
+              : line.concat(commonPrefix.slice(commonPrefixComparator.length));
+          callback(null, [[completion], line]);
+          shouldShowListOnNextTab = true;
           return;
         }
 
