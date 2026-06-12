@@ -5,5 +5,5 @@ export const getBuiltinCommandCompletion = (line: string) => {
     return builtinCommand.startsWith(line);
   });
 
-  return commands;
+  return commands.sort();
 };

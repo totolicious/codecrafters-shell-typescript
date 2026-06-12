@@ -37,5 +37,5 @@ export const getPathCommandCompletion = async (
     }
   });
 
-  return executables;
+  return executables.sort();
 };
