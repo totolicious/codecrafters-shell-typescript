@@ -42,8 +42,13 @@ export const commandCompleter: Completer = async (
   }
 
   const pathCommands = await getPathCommandCompletion(trimmedLine);
-  return [
-    pathCommands.length === 1 ? [`${pathCommands[0]} `] : pathCommands,
-    line,
-  ];
+  if (pathCommands.length) {
+    return [
+      pathCommands.length === 1 ? [`${pathCommands[0]} `] : pathCommands,
+      line,
+    ];
+  }
+
+  ringBell();
+  return [[], line];
 };
