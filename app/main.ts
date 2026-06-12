@@ -1,4 +1,4 @@
-import { createInterface } from "readline";
+import { createInterface } from "node:readline/promises";
 import { evalCommand } from "./repl/evalCommand";
 import { commandCompleter } from "./completer/commandCompleter";
 

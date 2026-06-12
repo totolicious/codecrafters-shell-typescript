@@ -1,12 +1,18 @@
-import type { Completer, CompleterResult } from "readline";
-import { BUILTIN_COMMAND_NAMES } from "../types";
-import { ringBell } from "../repl/ringBell";
+import type { Completer } from "node:readline/promises";
+import type { CompleterResult } from "node:readline";
 
-export const commandCompleter: Completer = (line): CompleterResult => {
+import { ringBell } from "../repl/ringBell";
+import { getBuiltinCommandCompletion } from "./getBuiltinCommandCompletion";
+import { getPathCommandCompletion } from "./getPathCommandCompletion";
+
+export const commandCompleter: Completer = async (
+  line,
+): Promise<CompleterResult> => {
   const trimmedLine = line.trim();
-  const commands = BUILTIN_COMMAND_NAMES.filter((builtinCommand) => {
-    return builtinCommand.startsWith(trimmedLine);
-  });
+  const builtinCommands = getBuiltinCommandCompletion(trimmedLine);
+  const pathCommands = await getPathCommandCompletion(trimmedLine);
+
+  const commands = [...builtinCommands, ...pathCommands].sort();
 
   if (!commands.length) {
     ringBell();
