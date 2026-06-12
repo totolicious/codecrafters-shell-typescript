@@ -1,10 +1,12 @@
 import { createInterface } from "readline";
 import { evalCommand } from "./repl/evalCommand";
+import { commandCompleter } from "./completer/commandCompleter";
 
 const rl = createInterface({
   input: process.stdin,
   output: process.stdout,
   prompt: "$ ",
+  completer: commandCompleter,
 });
 
 rl.on("line", async (line) => {
