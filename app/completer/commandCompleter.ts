@@ -16,8 +16,11 @@ import { getPathCommandCompletion } from "./getPathCommandCompletion";
 
 //   const commands = [...builtinCommands, ...pathCommands].sort();
 
-//   if (!commands.length) {
+//   if (commands.length !== 1) {
 //     ringBell();
+//   }
+
+//   if (!commands.length) {
 //     return [[], line];
 //   }
 
@@ -33,6 +36,9 @@ export const commandCompleter: Completer = async (
   const builtinCommands = getBuiltinCommandCompletion(trimmedLine);
 
   if (builtinCommands.length) {
+    if (builtinCommands.length !== 1) {
+      ringBell();
+    }
     return [
       builtinCommands.length === 1
         ? [`${builtinCommands[0]} `]
@@ -43,6 +49,9 @@ export const commandCompleter: Completer = async (
 
   const pathCommands = await getPathCommandCompletion(trimmedLine);
   if (pathCommands.length) {
+    if (pathCommands.length !== 1) {
+      ringBell();
+    }
     return [
       pathCommands.length === 1 ? [`${pathCommands[0]} `] : pathCommands,
       line,
