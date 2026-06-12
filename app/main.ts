@@ -1,12 +1,12 @@
-import { createInterface } from "node:readline/promises";
+import { createInterface, type Interface } from "node:readline";
 import { evalCommand } from "./repl/evalCommand";
-import { commandCompleter } from "./completer/commandCompleter";
+import { createCustomTabCompleter } from "./repl/customTabCompletion";
 
-const rl = createInterface({
+const rl: Interface = createInterface({
   input: process.stdin,
   output: process.stdout,
   prompt: "$ ",
-  completer: commandCompleter,
+  completer: createCustomTabCompleter(() => rl),
 });
 
 rl.on("line", async (line) => {
@@ -14,5 +14,4 @@ rl.on("line", async (line) => {
   rl.prompt();
 });
 
-// TODO: Uncomment the code below to pass the first stage
 rl.prompt();

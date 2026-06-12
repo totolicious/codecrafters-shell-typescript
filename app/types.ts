@@ -1,4 +1,4 @@
-import { Interface } from "readline";
+import type { Interface } from "node:readline";
 import type { RedirectionOperator } from "./repl/RedirectionOperator";
 import type { PassThrough } from "node:stream";
 

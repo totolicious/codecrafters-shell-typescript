@@ -1,4 +1,4 @@
-import { Interface } from "readline";
+import type { Interface } from "node:readline";
 import { extractCommandProperties } from "./extractCommandProperties";
 import { createCommandStreams } from "./createCommandStreams";
 

@@ -1,4 +1,4 @@
-import { Interface } from "readline";
+import { Interface } from "node:readline";
 import type { CommandStreams } from "../types";
 import { getBuiltinCommand } from "../commands/getBuiltinCommand";
 import { isBinary } from "../commands/isBinary";
